@@ -2,6 +2,7 @@
 
 namespace MongoDB;
 
+use MongoDB\BSON\Javascript;
 use MongoDB\Driver\Command;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\Manager;
@@ -27,6 +28,7 @@ use MongoDB\Operation\FindOne;
 use MongoDB\Operation\FindOneAndDelete;
 use MongoDB\Operation\FindOneAndReplace;
 use MongoDB\Operation\FindOneAndUpdate;
+use MongoDB\Operation\Group;
 use MongoDB\Operation\InsertMany;
 use MongoDB\Operation\InsertOne;
 use MongoDB\Operation\ListIndexes;
@@ -475,6 +477,23 @@ class Collection
     public function getNamespace()
     {
         return $this->databaseName . '.' . $this->collectionName;
+    }
+
+    /**
+     *
+     * @see Grop::__construct()
+     * @param mixed $keys Fields to group by. If an array or non-code object is passed, it will be the key used to group results.
+     * @param array $initial Initializes the aggregation result document.
+     * @param Javascript $reduce An aggregation function that operates on the documents during the grouping operation.
+     * @param array $options Command options
+     * @return Traversable
+     */
+    public function group($keys, array $initial, Javascript $reduce, array $options = [])
+    {
+        $operation = new Group($this->databaseName, $this->collectionName, $keys, $initial, $reduce, $options);
+        $server = $this->manager->selectServer(new ReadPreference(ReadPreference::RP_PRIMARY));
+
+        return $operation->execute($server);
     }
 
     /**
