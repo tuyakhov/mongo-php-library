@@ -13,6 +13,7 @@ use MongoDB\Driver\Server;
 use MongoDB\Driver\WriteConcern;
 use MongoDB\Exception\InvalidArgumentException;
 use MongoDB\Exception\InvalidArgumentTypeException;
+use MongoDB\GridFS\Bucket;
 use MongoDB\Model\CollectionInfoIterator;
 use MongoDB\Operation\CreateCollection;
 use MongoDB\Operation\DropCollection;
@@ -234,6 +235,41 @@ class Database
         }
 
         return new Collection($this->manager, $this->databaseName . '.' . $collectionName, $options);
+    }
+
+    /**
+     * Get a GridFS bucket within this database.
+     *
+     * Supported options:
+     *
+     *  * bucketName (string): The bucket name, which will be used as a prefix
+     *    for the files and chunks collections. Defaults to "fs".
+     *
+     *  * chunkSizeBytes (integer): The chunk size in bytes. Defaults to
+     *    261120 (i.e. 255 KiB).
+     *
+     *  * readPreference (MongoDB\Driver\ReadPreference): The default read
+     *    preference to use for collection operations. Defaults to the
+     *    Database's read preference.
+     *
+     *  * writeConcern (MongoDB\Driver\WriteConcern): The default write concern
+     *    to use for collection operations. Defaults to the Database's write
+     *    concern.
+     *
+     * @param array  $options        Bucket constructor options
+     * @return Bucket
+     */
+    public function getGridFS(array $options = [])
+    {
+        if ( ! isset($options['readPreference'])) {
+            $options['readPreference'] = $this->readPreference;
+        }
+
+        if ( ! isset($options['writeConcern'])) {
+            $options['writeConcern'] = $this->writeConcern;
+        }
+
+        return new Bucket($this->manager, $this->databaseName, $options);
     }
 
     /**
